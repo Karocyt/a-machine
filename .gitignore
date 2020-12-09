@@ -8,3 +8,4 @@ verif
 dist
 cabal.sandbox.config
 .cabal-sandbox
+a-machine
