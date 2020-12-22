@@ -9,6 +9,8 @@ import Machine
 main = do
     content <- readFile =<< processArgs =<< getArgs
     -- print content
-    print $ parseMachine content
+    case (parseMachine content) of
+        Left str  -> print str
+        Right m   -> print m
     print "Ok"
 

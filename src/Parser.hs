@@ -10,5 +10,8 @@ import Data.ByteString.Lazy.Char8 (pack)
 processArgs xs  | length xs /= 1    = putStrLn ("Usage: ./a-machine [filename]\n\twhere 'filename' is a json encoded valid machine description.") >> exitFailure
                 | otherwise         = pure $ xs !! 0 -- :: IO String
 
--- parseMachine :: String -> Maybe Machine
+-- parseMachine :: String -> Either String Machine
 parseMachine c = eitherDecode (pack c) :: Either String Machine
+
+-- lexMachine :: Machine -> Bool
+lexMachine m = True
