@@ -5,7 +5,7 @@
 ### Windows
 Download and install [Stack](https://get.haskellstack.org/stable/windows-x86_64-installer.exe).
 
-### Unix systems (including MacOs)
+### Unix systems (including MacOs X)
 ```bash
 curl -sSL https://get.haskellstack.org/ | sh
 ```
