@@ -9,16 +9,16 @@ import Runner
 -- main :: IO ()
 main = do
     putStrLn "-- BEGIN ----------------------------------"
-    args <- processArgs =<< getArgs
-    putStrLn "Arguments validated"
-    content <- readFile $ args !! 0
-    putStrLn "Description read"
+    args <- (getArgs >>= processArgs) -- parenthesis for aesthetics
+    putStrLn "Arguments checked"
     let tape = args !! 1
+    content <- readFile $ head args
+    putStrLn "Description read"
     -- print content
 
     case (parseMachine content) of
         Left str  -> print str
-        Right m   -> putStrLn "Machine loaded" >> runMachine m tape
+        Right m   -> putStrLn $ runMachine tape m
 
     putStrLn "-- END ------------------------------------"
 
