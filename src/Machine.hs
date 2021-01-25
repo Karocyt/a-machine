@@ -107,3 +107,6 @@ instance FromJSON JTransition
 -- BuildMachine will need heavy constructors
 -- BasicCheck args could disappear with even heavier Machine smart constructors
 -- is managing missing tape with Either too much ?
+-- `json` package might sound more "standard library" than `aeson`, or should we
+--  make a json parser ourselves in strict accordance to the subject ?
+-- Fun ressource if needed: https://abhinavsarkar.net/posts/json-parsing-from-scratch-in-haskell/
