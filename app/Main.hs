@@ -6,6 +6,9 @@ import Parser
 import Machine
 import Runner
 
+-- both args and content might need to be IO (Either String a) ?
+-- I broke my teeth on readFile, my best being IO (Either error Bytestring) at some point 
+
 -- main :: IO ()
 main = do
     putStrLn "-- BEGIN ----------------------------------"

@@ -12,6 +12,10 @@ module Machine where
 import GHC.Generics
 import Data.Aeson (ToJSON, FromJSON)
 
+-- for Map (String, Char) Transition
+import Data.Map (Map)
+import qualified Data.Map as Map -- functions names clash with Prelude, not Map type itself
+
 -- Show Functions
 import Data.Typeable
 instance (Typeable a, Typeable b) => Show (a->b) where
@@ -65,12 +69,12 @@ data JTransitions = JTransitions {
 } deriving (Generic, Show)
 
 data JMachine = JMachine {
-    name :: String,
-    alphabet :: [[Char]],
-    blank :: Char,
-    initial :: String,
-    finals :: [String],
-    transitions :: JTransitions 
+    jName :: String,
+    jAlphabet :: [[Char]],
+    jBlank :: Char,
+    jInitial :: String,
+    jFinals :: [String],
+    jTransitions :: JTransitions 
 } deriving (Generic, Show)
 
 -- The LANGUAGE pragma and Generic instance let us write empty FromJSON and ToJSON instances for which the compiler will generate sensible default implementations.
@@ -105,11 +109,11 @@ instance FromJSON JTransition
 -- we'll need to first generate partially applied funcs without transitionsList then apply transitionList once all transitions are loaded
 
 -- Machine should have:
--- - name
--- - alphabet
--- - blank
--- - finals
--- - transitions: map of String -> Transition
+-- - name: String
+-- - alphabet: [Char]
+-- - blank: Char
+-- - finals: [String]
+-- - transitions: Map (String Char) Transition
 
 -- Runner is a tail call stopping when currTransition is in finals
 
@@ -123,9 +127,9 @@ instance FromJSON JTransition
 -- BuildMachine will need heavy constructors
 -- BasicCheck args could disappear with even heavier Machine smart constructors
 -- is managing missing tape with Either too much ?
--- `json` package might sound more "standard library" than `aeson`, or should we
---  make a json parser ourselves in strict accordance to the subject ?
--- Fun ressource if needed: https://abhinavsarkar.net/posts/json-parsing-from-scratch-in-haskell/
+-- `json` package might sound more "standard library" than `aeson`
+
+-- To return a Either String Machine, all fields might need to be their own types, returning Either in their constructors ?
 
 type Tape = String
 type Transition = State -> Either String State
@@ -142,7 +146,7 @@ data State = State {
     nextTransition :: String -- should be Transition
 } deriving (Show)
 
-genericTransition :: read Char -> write Char -> Move -> to_state String -> transitionsList [Transition] -> currState State -> newState Either String State  
+genericTransition :: current Char -> to_write Char -> Move -> to_state String -> transitionsList [Transition] -> currState State -> newState Either String State  
 genericTransition = error "Not implemented yet"
 
 data Machine = Machine {
@@ -150,20 +154,20 @@ data Machine = Machine {
     mAlphabet :: [Char],
     mBlank :: Char,
     mFinals :: [String],
-    mTransitions :: [Transition]
+    mTransitions :: Map (String, Char) Transition
 } deriving (Show)
 
 buildMachine :: JMachine -> Tape -> Either String (Machine, State)
 buildMachine jm tape = Right (
     Machine {
-        mName = name jm,
-        mAlphabet = foldl (\l x -> (head x):l) [] (alphabet jm), -- foldl : func acc target -- TO CHECK: list has only one elem
-        mBlank = blank jm,
-        mFinals = finals jm,
-        mTransitions = []
+        mName = jName jm,
+        mAlphabet = foldl (\acc curr_elem -> (head curr_elem):acc) [] (jAlphabet jm), -- foldl : func acc target -- TO CHECK: list has only one elem
+        mBlank = jBlank jm,
+        mFinals = jFinals jm,
+        mTransitions = Map.empty
     },
     State {
-        tape=tape,
-        pos=0,
-        nextTransition=initial jm
+        tape = tape,
+        pos = 0,
+        nextTransition = jInitial jm
     })

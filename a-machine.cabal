@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 081d7680aa6edd0db132d6a447fed5e294f3a395863556fb44c2738aa0599292
+-- hash: e4d6e8f606d0bd8aa1883b20021cba2b75723cf75f72e4861929a3419621dd43
 
 name:           a-machine
 version:        0.1.0.0
@@ -38,6 +38,7 @@ library
       aeson
     , base >=4.7 && <5
     , bytestring
+    , containers
   default-language: Haskell2010
 
 executable a-machine-exe
@@ -52,6 +53,7 @@ executable a-machine-exe
     , aeson
     , base >=4.7 && <5
     , bytestring
+    , containers
   default-language: Haskell2010
 
 test-suite a-machine-test
@@ -67,4 +69,5 @@ test-suite a-machine-test
     , aeson
     , base >=4.7 && <5
     , bytestring
+    , containers
   default-language: Haskell2010
