@@ -185,13 +185,16 @@ data TransitionObject = TransitionObject {
 -- parseTransitions :: Value -> Parser [TransitionObject]
 parseTransitions raw =
     -- Conversion function + composition operator
-    map (\(name, fields) -> do
+    map (\(name, fields) -> do -- Parser
         tmpRead <- fields .: "read"
         tmpToState <- fields .: "to_state"
         tmpWrite <- fields .: "write"
         tmpAction <- fields .: "action"
-        return (TransitionObject name tmpRead tmpToState tmpWrite (stringToMove tmpAction))
-        ) .
+        tmpMove <- case (stringToMove tmpAction) of
+            Left s -> error s
+            Right m -> return m
+        return (TransitionObject name tmpRead tmpToState tmpWrite tmpMove))
+        .
     -- Turn the HashMap with random name into a list of pairs (name, fields), and apply (<$>) operator
     HM.toList <$>
     -- parse the JSON thing into a HashMap String (HashMap String a)
