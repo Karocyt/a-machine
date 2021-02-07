@@ -1,16 +1,19 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
 -- ScopedTypeVariables to print function types signature at runtime
 -- DeriveGeneric to derive ToJSON and FromJSON
+-- OverloadedStrings allows for seemless conversion between Text/String/ByteString as needed
 
 module Machine where
 
- -- Show functions
+-- For ToJSON
+import Data.Aeson.Types
+import qualified Data.HashMap.Strict as HM
 
 -- Generic for ToJSON/FromJSON
-{-# LANGUAGE DeriveGeneric #-}
 import GHC.Generics
-import Data.Aeson (ToJSON, FromJSON)
+import Data.Aeson (Value(..), FromJSON(..), parseJSON, (.:), (.=), withObject)
 
 -- for Map (String, Char) Transition
 import Data.Map (Map)
@@ -69,12 +72,12 @@ data JTransitions = JTransitions {
 } deriving (Generic, Show)
 
 data JMachine = JMachine {
-    jName :: String,
-    jAlphabet :: [[Char]],
-    jBlank :: Char,
-    jInitial :: String,
-    jFinals :: [String],
-    jTransitions :: JTransitions 
+    name :: String,
+    alphabet :: [[Char]],
+    blank :: Char,
+    initial :: String,
+    finals :: [String],
+    transitions :: JTransitions 
 } deriving (Generic, Show)
 
 -- The LANGUAGE pragma and Generic instance let us write empty FromJSON and ToJSON instances for which the compiler will generate sensible default implementations.
@@ -85,14 +88,11 @@ data JMachine = JMachine {
 -- For efficiency, we write a simple toEncoding implementation, as
 -- the default version uses toJSON.
 
-instance ToJSON JMachine where
-instance FromJSON JMachine
+instance ToJSON JMachine
 
-instance ToJSON JTransitions where
-instance FromJSON JTransitions
+instance ToJSON JTransitions
 
-instance ToJSON JTransition where
-instance FromJSON JTransition
+instance ToJSON JTransition
 
 
 -- State is composed of:
@@ -146,7 +146,7 @@ data State = State {
     nextTransition :: String -- should be Transition
 } deriving (Show)
 
-genericTransition :: current Char -> to_write Char -> Move -> to_state String -> transitionsList [Transition] -> currState State -> newState Either String State  
+genericTransition :: toWrite Char -> Move -> toState String -> currState State -> newState Either String State  
 genericTransition = error "Not implemented yet"
 
 data Machine = Machine {
@@ -160,14 +160,52 @@ data Machine = Machine {
 buildMachine :: JMachine -> Tape -> Either String (Machine, State)
 buildMachine jm tape = Right (
     Machine {
-        mName = jName jm,
-        mAlphabet = foldl (\acc curr_elem -> (head curr_elem):acc) [] (jAlphabet jm), -- foldl : func acc target -- TO CHECK: list has only one elem
-        mBlank = jBlank jm,
-        mFinals = jFinals jm,
+        mName = name jm,
+        mAlphabet = foldl (\acc currElem -> (head currElem):acc) [] (alphabet jm), -- foldl : func acc target -- TO CHECK: list has only one elem
+        mBlank = blank jm,
+        mFinals = finals jm,
         mTransitions = Map.empty
     },
     State {
         tape = tape,
         pos = 0,
-        nextTransition = jInitial jm
+        nextTransition = initial jm
     })
+
+data TransitionObject = TransitionObject {
+    tName :: String,
+    tRead :: Char,
+    tToState :: [Char],
+    tWrite :: Char,
+    tMove :: Move
+} deriving (Generic, Show)
+
+-- Following https://artyom.me/aeson tutorial
+
+-- parseTransitions :: Value -> Parser [TransitionObject]
+parseTransitions raw =
+    -- Conversion function + composition operator
+    map (\(name, fields) -> do
+        tmpRead <- fields .: "read"
+        tmpToState <- fields .: "to_state"
+        tmpWrite <- fields .: "write"
+        tmpAction <- fields .: "action"
+        return (TransitionObject name tmpRead tmpToState tmpWrite (stringToMove tmpAction))
+        ) .
+    -- Turn the HashMap with random name into a list of pairs (name, fields), and apply (<$>) operator
+    HM.toList <$>
+    -- parse the JSON thing into a HashMap String (HashMap String a)
+    parseJSON raw
+
+instance FromJSON Machine where
+    parseJSON = withObject "machine" $ \o -> do
+        mName <- o .: "name"
+        alphabetStrings <- o .: "alphabet"
+        mAlphabet <- foldl (\acc curr_elem -> (head curr_elem):acc) [] alphabetStrings
+        mBlank <- o .: "blank"
+        mFinals <- o .: "finals"
+        transitionsListObject <- o .: "transitions"
+        transitionsListParsed <- parseTransitions transitionsListObject
+        -- can't include the Map in curryied genericTransition... ?!
+        mTransitions <- foldl (\acc currT -> Map.insert (tName currT, tRead currT) (genericTransition (tWrite currT) (tMove currT) (tToState currT))) Map.empty
+        return Machine{mName=mName, mAlphabet=mAlphabet, mBlank=mBlank, mFinals=mFinals, mTransitions=mTransitions}
