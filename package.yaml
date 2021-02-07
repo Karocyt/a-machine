@@ -24,6 +24,7 @@ dependencies:
 - bytestring
 - aeson
 - containers
+- unordered-containers
 
 library:
   source-dirs: src
