@@ -1,9 +1,27 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveGeneric #-}
+-- ScopedTypeVariables to print function types signature at runtime
+-- DeriveGeneric to derive ToJSON and FromJSON
 
 module Machine where
 
+ -- Show functions
+
+-- Generic for ToJSON/FromJSON
+{-# LANGUAGE DeriveGeneric #-}
 import GHC.Generics
 import Data.Aeson (ToJSON, FromJSON)
+
+-- for Map (String, Char) Transition
+import Data.Map (Map)
+import qualified Data.Map as Map -- functions names clash with Prelude, not Map type itself
+
+-- Show Functions
+import Data.Typeable
+instance (Typeable a, Typeable b) => Show (a->b) where
+  show _ = show $ typeOf (undefined :: a -> b)
+
+
 
 -- The json fields are defined as follows:
 --  - name: The name of the described machine
@@ -51,12 +69,12 @@ data JTransitions = JTransitions {
 } deriving (Generic, Show)
 
 data JMachine = JMachine {
-    name :: String,
-    alphabet :: [[Char]],
-    blank :: Char,
-    initial :: String,
-    finals :: [String],
-    transitions :: JTransitions 
+    jName :: String,
+    jAlphabet :: [[Char]],
+    jBlank :: Char,
+    jInitial :: String,
+    jFinals :: [String],
+    jTransitions :: JTransitions 
 } deriving (Generic, Show)
 
 -- The LANGUAGE pragma and Generic instance let us write empty FromJSON and ToJSON instances for which the compiler will generate sensible default implementations.
@@ -80,21 +98,22 @@ instance FromJSON JTransition
 -- State is composed of:
 -- - tape
 -- - position
--- - currTransition
+-- - nextTransition
 
 -- Tape is an alias for String
--- Direction is (+1) or (-1) -- bounds checks ?
+-- Move is (+1) or (-1) -- bounds checks ?
 
--- Transition is of type State -> State
+-- Transition is of type State -> Either String State
 -- Behing the scenes, Transition is a partially applied GenericTransition of type
--- (State -> read Char -> write Char -> Move -> to_state String) -> newState State  
+-- (read Char -> write Char -> Move -> to_state String -> currState State -> transitionsList [Transition]) -> newState State
+-- we'll need to first generate partially applied funcs without transitionsList then apply transitionList once all transitions are loaded
 
 -- Machine should have:
--- - name
--- - alphabet
--- - blank
--- - finals
--- - transitions: map of String -> Transition
+-- - name: String
+-- - alphabet: [Char]
+-- - blank: Char
+-- - finals: [String]
+-- - transitions: Map (String Char) Transition
 
 -- Runner is a tail call stopping when currTransition is in finals
 
@@ -104,9 +123,51 @@ instance FromJSON JTransition
 
 -- FLOW:
 -- BasicCheckArgs => buildMachine => runMachine
+-- might need an intermediary layer to avoid the IO context in BuildMachine
 -- BuildMachine will need heavy constructors
 -- BasicCheck args could disappear with even heavier Machine smart constructors
 -- is managing missing tape with Either too much ?
--- `json` package might sound more "standard library" than `aeson`, or should we
---  make a json parser ourselves in strict accordance to the subject ?
--- Fun ressource if needed: https://abhinavsarkar.net/posts/json-parsing-from-scratch-in-haskell/
+-- `json` package might sound more "standard library" than `aeson`
+
+-- To return a Either String Machine, all fields might need to be their own types, returning Either in their constructors ?
+
+type Tape = String
+type Transition = State -> Either String State
+
+type Move = Int
+stringToMove :: String -> Either String Move
+stringToMove "LEFT" = Right (-1)
+stringToMove "RIGHT" = Right 1
+stringToMove s = Left ("Invalid direction in a Transition: '" ++ s ++ "'")
+
+data State = State {
+    tape :: Tape,
+    pos :: Int,
+    nextTransition :: String -- should be Transition
+} deriving (Show)
+
+genericTransition :: current Char -> to_write Char -> Move -> to_state String -> transitionsList [Transition] -> currState State -> newState Either String State  
+genericTransition = error "Not implemented yet"
+
+data Machine = Machine {
+    mName :: String,
+    mAlphabet :: [Char],
+    mBlank :: Char,
+    mFinals :: [String],
+    mTransitions :: Map (String, Char) Transition
+} deriving (Show)
+
+buildMachine :: JMachine -> Tape -> Either String (Machine, State)
+buildMachine jm tape = Right (
+    Machine {
+        mName = jName jm,
+        mAlphabet = foldl (\acc curr_elem -> (head curr_elem):acc) [] (jAlphabet jm), -- foldl : func acc target -- TO CHECK: list has only one elem
+        mBlank = jBlank jm,
+        mFinals = jFinals jm,
+        mTransitions = Map.empty
+    },
+    State {
+        tape = tape,
+        pos = 0,
+        nextTransition = jInitial jm
+    })
