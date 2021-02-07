@@ -146,7 +146,8 @@ data State = State {
     nextTransition :: String -- should be Transition
 } deriving (Show)
 
-genericTransition :: toWrite Char -> Move -> toState String -> currState State -> newState Either String State  
+-- toWrite Char -> Move -> toState String -> currState State -> newState Either String State 
+genericTransition :: Char -> Move -> String -> State -> Either String State  
 genericTransition = error "Not implemented yet"
 
 data Machine = Machine {
