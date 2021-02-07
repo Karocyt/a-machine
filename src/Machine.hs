@@ -204,7 +204,7 @@ instance FromJSON Machine where
     parseJSON = withObject "machine" $ \o -> do
         mName <- o .: "name"
         alphabetStrings <- o .: "alphabet"
-        mAlphabet <- foldl (\acc curr_elem -> (head curr_elem):acc) [] alphabetStrings
+        let mAlphabet = foldl (\acc curr_elem -> (head curr_elem):acc) [] alphabetStrings
         mBlank <- o .: "blank"
         mFinals <- o .: "finals"
         transitionsListObject <- o .: "transitions"
