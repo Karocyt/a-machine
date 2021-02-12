@@ -132,7 +132,9 @@ instance ToJSON JTransition
 -- To return a Either String Machine, all fields might need to be their own types, returning Either in their constructors ?
 
 type Tape = String
-type Transition = State -> Either String State
+-- Map added to parameters for now as I can't see how to properly curry it
+-- type Transition = Map (String, Char) Transition -> State -> Either String State
+newtype Transition a = Transition { runTransition :: Map (String, Char) Transition a -> State -> Either String State }
 
 type Move = Int
 stringToMove :: String -> Either String Move
@@ -146,8 +148,8 @@ data State = State {
     nextTransition :: String -- should be Transition
 } deriving (Show)
 
--- toWrite Char -> Move -> toState String -> currState State -> newState Either String State 
-genericTransition :: Char -> Move -> String -> State -> Either String State  
+-- toWrite Char -> Move -> toState String -> transitionList Map (String, Char) Transition -> currState State -> newState Either String State 
+genericTransition :: Char -> Move -> String -> Map (String, Char) Transition -> State -> Either String State  
 genericTransition = error "Not implemented yet"
 
 data Machine = Machine {
