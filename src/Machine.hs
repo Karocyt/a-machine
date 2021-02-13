@@ -88,11 +88,11 @@ data JMachine = JMachine {
 -- For efficiency, we write a simple toEncoding implementation, as
 -- the default version uses toJSON.
 
-instance ToJSON JMachine
+instance FromJSON JMachine
 
-instance ToJSON JTransitions
+instance FromJSON JTransitions
 
-instance ToJSON JTransition
+instance FromJSON JTransition
 
 
 -- State is composed of:
@@ -206,7 +206,7 @@ parseTransitions raw =
 instance FromJSON Machine where
     parseJSON = withObject "machine" $ \o -> do
         mName <- o .: "name"
-        alphabetStrings <- o .: "alphabet"
+        alphabetStrings <- o .: "alphabet" :: Parser [String]
         let mAlphabet = foldl (\acc curr_elem -> (head curr_elem):acc) [] alphabetStrings
         mBlank <- o .: "blank"
         mFinals <- o .: "finals"
