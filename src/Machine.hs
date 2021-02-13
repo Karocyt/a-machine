@@ -211,7 +211,8 @@ instance FromJSON Machine where
         mBlank <- o .: "blank"
         mFinals <- o .: "finals"
         transitionsListObject <- o .: "transitions"
-        transitionsListParsed <- parseTransitions transitionsListObject
+        transitionsListParsed <- parseTransitions transitionsListObject -- > Parser ([Parser t]) 
+        transitions <- sequence $ transitionsListParsed -- > Parser [t] -> [t]
         -- can't include the Map in curryied genericTransition... ?!
-        let mTransitions = foldl (\acc currT -> Map.insert (tName currT, tRead currT) (genericTransition (tWrite currT) (tMove currT) (tToState currT)) acc) Map.empty transitionsListParsed
+        let mTransitions = foldl (\acc currT -> Map.insert (tName currT, tRead currT) (genericTransition (tWrite currT) (tMove currT) (tToState currT)) acc) Map.empty transitions
         return Machine{mName=mName, mAlphabet=mAlphabet, mBlank=mBlank, mFinals=mFinals, mTransitions=mTransitions}
