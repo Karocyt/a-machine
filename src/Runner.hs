@@ -8,5 +8,5 @@ import Machine
 -- should return the tape in its final stage
 -- can return errorz as a string to without using Either ?
 
-runMachine :: String -> JMachine -> String
+runMachine :: String -> Machine -> String
 runMachine t m = "Machine running..."

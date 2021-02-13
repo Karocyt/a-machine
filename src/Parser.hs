@@ -13,10 +13,10 @@ processArgs xs  | length xs /= 2    = putStrLn ("Usage: ./a-machine desc.json ta
                 | otherwise         = pure xs -- :: [IO String]
 
 -- parseMachine :: String -> Either String Machine
-parseMachine c = lexMachine (eitherDecode (pack c) :: Either String JMachine)
+parseMachine c = eitherDecode (pack c) :: Either String Machine
 
 -- checkTape useless as we can error on execution if invalid char
 
-lexMachine :: Either String JMachine -> Either String JMachine
-lexMachine (Left str) = Left str
-lexMachine (Right m) = Right m
+-- lexMachine :: Either String Machine -> Either String Machine
+-- lexMachine (Left str) = Left str
+-- lexMachine (Right m) = Right m

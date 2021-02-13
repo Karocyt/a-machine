@@ -58,42 +58,6 @@ instance (Typeable a, Typeable b) => Show (a->b) where
 --      - action: Movement of the head for this transition, either LEFT, or
 --         RIGHT.
 
-data JTransition = JTransition {
-    read :: Char,
-    to_state :: [Char],
-    write :: Char,
-    action :: String
-} deriving (Generic, Show)
-
-data JTransitions = JTransitions {
-    scanright :: [JTransition],
-    eraseone :: [JTransition],
-    subone :: [JTransition]
-} deriving (Generic, Show)
-
-data JMachine = JMachine {
-    name :: String,
-    alphabet :: [[Char]],
-    blank :: Char,
-    initial :: String,
-    finals :: [String],
-    transitions :: JTransitions 
-} deriving (Generic, Show)
-
--- The LANGUAGE pragma and Generic instance let us write empty FromJSON and ToJSON instances for which the compiler will generate sensible default implementations.
-
--- No need to provide a parseJSON implementation.
-
--- No need to provide a toJSON implementation.
--- For efficiency, we write a simple toEncoding implementation, as
--- the default version uses toJSON.
-
-instance FromJSON JMachine
-
-instance FromJSON JTransitions
-
-instance FromJSON JTransition
-
 
 -- State is composed of:
 -- - tape
@@ -159,21 +123,6 @@ data Machine = Machine {
     mFinals :: [String],
     mTransitions :: Map (String, Char) Transition
 } deriving (Show)
-
-buildMachine :: JMachine -> Tape -> Either String (Machine, State)
-buildMachine jm tape = Right (
-    Machine {
-        mName = name jm,
-        mAlphabet = foldl (\acc currElem -> (head currElem):acc) [] (alphabet jm), -- foldl : func acc target -- TO CHECK: list has only one elem
-        mBlank = blank jm,
-        mFinals = finals jm,
-        mTransitions = Map.empty
-    },
-    State {
-        tape = tape,
-        pos = 0,
-        nextTransition = initial jm
-    })
 
 data TransitionObject = TransitionObject {
     tName :: String,
