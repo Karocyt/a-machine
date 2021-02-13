@@ -23,8 +23,6 @@ import qualified Data.Map as Map -- functions names clash with Prelude, not Map 
 import Data.Typeable
 instance (Typeable a, Typeable b) => Show (a->b) where
   show _ = show $ typeOf (undefined :: a -> b)
--- instance Show (Map (String, Char) Transition a) where
---   show _ = "Map of Transitions"
 
 
 
@@ -215,5 +213,5 @@ instance FromJSON Machine where
         transitionsListObject <- o .: "transitions"
         transitionsListParsed <- parseTransitions transitionsListObject
         -- can't include the Map in curryied genericTransition... ?!
-        let mTransitions = foldl (\acc currT -> Map.insert (tName currT, tRead currT) (genericTransition (tWrite currT) (tMove currT) (tToState currT)) acc) Map.empty
+        let mTransitions = foldl (\acc currT -> Map.insert (tName currT, tRead currT) (genericTransition (tWrite currT) (tMove currT) (tToState currT)) acc) Map.empty transitionsListParsed
         return Machine{mName=mName, mAlphabet=mAlphabet, mBlank=mBlank, mFinals=mFinals, mTransitions=mTransitions}
