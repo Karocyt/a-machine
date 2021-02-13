@@ -23,6 +23,8 @@ import qualified Data.Map as Map -- functions names clash with Prelude, not Map 
 import Data.Typeable
 instance (Typeable a, Typeable b) => Show (a->b) where
   show _ = show $ typeOf (undefined :: a -> b)
+-- instance Show (Map (String, Char) Transition a) where
+--   show _ = "Map of Transitions"
 
 
 
@@ -134,7 +136,7 @@ instance ToJSON JTransition
 type Tape = String
 -- Map added to parameters for now as I can't see how to properly curry it
 -- type Transition = Map (String, Char) Transition -> State -> Either String State
-newtype Transition a = Transition { runTransition :: Map (String, Char) Transition a -> State -> Either String State }
+newtype Transition = Transition { runTransition :: Map (String, Char) Transition -> State -> Either String State } deriving Show
 
 type Move = Int
 stringToMove :: String -> Either String Move
