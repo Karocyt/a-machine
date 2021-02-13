@@ -134,10 +134,9 @@ data TransitionObject = TransitionObject {
 
 -- Following https://artyom.me/aeson tutorial
 
--- parseTransitions :: Value -> Parser [TransitionObject]
-parseTransitions raw =
-    -- Conversion function + composition operator
-    map (\(name, fields) -> do -- Parser
+
+-- mini HashMap (name, list of obj) -> list of transitions
+concatenateTransitions (name, tList) = map (\acc fields -> do -- Parser
         tmpRead <- fields .: "read"
         tmpToState <- fields .: "to_state"
         tmpWrite <- fields .: "write"
@@ -145,9 +144,16 @@ parseTransitions raw =
         tmpMove <- case (stringToMove tmpAction) of
             Left s -> error s
             Right m -> return m
-        return (TransitionObject name tmpRead tmpToState tmpWrite tmpMove))
+        (TransitionObject name tmpRead tmpToState tmpWrite tmpMove):acc) [] tList
+
+
+-- parseTransitions :: Value -> Parser [TransitionObject]
+parseTransitions raw =
+    -- Conversion function + composition operator
+    map (\(name, lines) -> do -- Parser
+        foldl (\acc val -> (concatenateTransitions name val) ++ acc) [] 
         .
-    -- Turn the HashMap with random name into a list of pairs (name, fields), and apply (<$>) operator
+    -- Turn the HashMap with random name into a list of pairs (name, lines) then (name, fields), and apply (<$>) operator
     HM.toList <$>
     -- parse the JSON thing into a HashMap String (HashMap String a)
     parseJSON raw
