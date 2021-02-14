@@ -135,8 +135,9 @@ data TransitionObject = TransitionObject {
 -- Following https://artyom.me/aeson tutorial
 
 
--- mini HashMap (name, list of obj) -> list of transitions
-concatenateTransitions (name, tList) = map (\acc fields -> do -- Parser
+-- mini HashMap (name, list of obj) -> list of transitions objects
+-- concatenateTransitions :: (String, [Parser Object]) -> [Parser TransitionObject]
+buildTransition name fields = do -- Parser
         tmpRead <- fields .: "read"
         tmpToState <- fields .: "to_state"
         tmpWrite <- fields .: "write"
@@ -144,14 +145,16 @@ concatenateTransitions (name, tList) = map (\acc fields -> do -- Parser
         tmpMove <- case (stringToMove tmpAction) of
             Left s -> error s
             Right m -> return m
-        (TransitionObject name tmpRead tmpToState tmpWrite tmpMove):acc) [] tList
+        return $ TransitionObject name tmpRead tmpToState tmpWrite tmpMove
 
 
 -- parseTransitions :: Value -> Parser [TransitionObject]
 parseTransitions raw =
     -- Conversion function + composition operator
-    map (\(name, lines) -> do -- Parser
-        foldl (\acc val -> (concatenateTransitions name val) ++ acc) [] 
+    foldl (\globalAcc (name, linesArray :: [Object]) ->
+        (foldl (\nameAcc lineObject ->
+            (buildTransition name lineObject):nameAcc) [] linesArray) ++ globalAcc) []
+
         .
     -- Turn the HashMap with random name into a list of pairs (name, lines) then (name, fields), and apply (<$>) operator
     HM.toList <$>
@@ -165,8 +168,8 @@ instance FromJSON Machine where
         let mAlphabet = foldl (\acc curr_elem -> (head curr_elem):acc) [] alphabetStrings
         mBlank <- o .: "blank"
         mFinals <- o .: "finals"
-        transitionsListObject <- o .: "transitions"
-        transitionsListParsed <- parseTransitions transitionsListObject -- [Parser t] <- Parser ([Parser t]) 
+        transitionsListObject <- o .: "transitions" -- > Parser Object
+        transitionsListParsed <- parseTransitions transitionsListObject -- [Parser TransitionObject] <- (Parser Object -> (Parser [Parser TransitionObject])) 
         transitions <- sequence $ transitionsListParsed -- [t] <- [Parser t] -> Parser [t]
         -- can't include the Map in curryied genericTransition... ?!
         let mTransitions = foldl (\acc currT -> Map.insert (tName currT, tRead currT) (Transition (genericTransition (tWrite currT) (tMove currT) (tToState currT))) acc) Map.empty transitions
