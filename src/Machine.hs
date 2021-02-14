@@ -153,7 +153,7 @@ parseTransitions raw =
         (foldl (\nameAcc lineObject ->
             (buildTransition name lineObject):nameAcc) [] linesArray) ++ globalAcc) []
         .
-    -- Turn the HashMap with random name into a list of pairs (name, lines) then (name, fields), and apply (<$>) operator
+    -- Turn the HashMap with random name into a list of pairs (name, [objects]) and apply (<$>) operator
     HM.toList <$>
     -- parse the JSON thing into a HashMap String (HashMap String a)
     parseJSON raw
