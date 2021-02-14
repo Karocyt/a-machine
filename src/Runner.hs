@@ -9,4 +9,4 @@ import Machine
 -- can return errorz as a string to without using Either ?
 
 runMachine :: String -> Machine -> String
-runMachine t m = "Machine running..."
+runMachine t m = show m
