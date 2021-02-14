@@ -101,6 +101,7 @@ type Tape = String
 newtype Transition = Transition { runTransition :: Map (String, Char) Transition -> State -> Either String State } deriving Show
 
 type Move = Int
+
 stringToMove :: String -> Either String Move
 stringToMove "LEFT" = Right (-1)
 stringToMove "RIGHT" = Right 1
@@ -134,9 +135,7 @@ data TransitionObject = TransitionObject {
 
 -- Following https://artyom.me/aeson tutorial
 
-
--- mini HashMap (name, list of obj) -> list of transitions objects
--- concatenateTransitions :: (String, [Parser Object]) -> [Parser TransitionObject]
+buildTransition :: String -> Object -> Parser TransitionObject
 buildTransition name fields = do -- Parser
         tmpRead <- fields .: "read"
         tmpToState <- fields .: "to_state"
@@ -147,8 +146,7 @@ buildTransition name fields = do -- Parser
             Right m -> return m
         return $ TransitionObject name tmpRead tmpToState tmpWrite tmpMove
 
-
--- parseTransitions :: Value -> Parser [TransitionObject]
+parseTransitions :: Value -> Parser [Parser TransitionObject]
 parseTransitions raw =
     -- Conversion function + composition operator
     foldl (\globalAcc (name, linesArray :: [Object]) ->
