@@ -125,7 +125,7 @@ data Machine = Machine {
     mTransitions :: Map (String, Char) Transition
 } deriving (Show)
 
-data TransitionObject = TransitionObject {
+data TransitionStruct = TransitionStruct {
     tName :: String,
     tRead :: Char,
     tToState :: [Char],
@@ -135,7 +135,7 @@ data TransitionObject = TransitionObject {
 
 -- Following https://artyom.me/aeson tutorial
 
-buildTransition :: String -> Object -> Parser TransitionObject
+buildTransition :: String -> Object -> Parser TransitionStruct
 buildTransition name fields = do -- Parser
         tmpRead <- fields .: "read"
         tmpToState <- fields .: "to_state"
@@ -144,9 +144,9 @@ buildTransition name fields = do -- Parser
         tmpMove <- case (stringToMove tmpAction) of
             Left s -> error s
             Right m -> return m
-        return $ TransitionObject name tmpRead tmpToState tmpWrite tmpMove
+        return $ TransitionStruct name tmpRead tmpToState tmpWrite tmpMove
 
-parseTransitions :: Value -> Parser [Parser TransitionObject]
+parseTransitions :: Value -> Parser [Parser TransitionStruct]
 parseTransitions raw =
     -- Conversion function + composition operator
     foldl (\globalAcc (name, linesArray :: [Object]) ->
@@ -166,7 +166,7 @@ instance FromJSON Machine where
         mBlank <- o .: "blank"
         mFinals <- o .: "finals"
         transitionsListObject <- o .: "transitions" -- > Parser Object
-        transitionsListParsed <- parseTransitions transitionsListObject -- [Parser TransitionObject] <- (Parser Object -> (Parser [Parser TransitionObject])) 
+        transitionsListParsed <- parseTransitions transitionsListObject -- [Parser TransitionStruct] <- (Parser Object -> (Parser [Parser TransitionStruct])) 
         transitions <- sequence $ transitionsListParsed -- [t] <- [Parser t] -> Parser [t]
         -- can't include the Map in curryied genericTransition... ?!
         let mTransitions = foldl (\acc currT -> Map.insert (tName currT, tRead currT) (Transition (genericTransition (tWrite currT) (tMove currT) (tToState currT))) acc) Map.empty transitions
