@@ -154,7 +154,6 @@ parseTransitions raw =
     foldl (\globalAcc (name, linesArray :: [Object]) ->
         (foldl (\nameAcc lineObject ->
             (buildTransition name lineObject):nameAcc) [] linesArray) ++ globalAcc) []
-
         .
     -- Turn the HashMap with random name into a list of pairs (name, lines) then (name, fields), and apply (<$>) operator
     HM.toList <$>
