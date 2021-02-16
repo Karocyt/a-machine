@@ -122,7 +122,8 @@ data Machine = Machine {
     mAlphabet :: [Char],
     mBlank :: Char,
     mFinals :: [String],
-    mTransitions :: Map (String, Char) Transition
+    mTransitions :: Map (String, Char) Transition,
+    mInitial :: String
 } deriving (Show)
 
 data TransitionStruct = TransitionStruct {
@@ -165,9 +166,10 @@ instance FromJSON Machine where
         let mAlphabet = foldl (\acc curr_elem -> (head curr_elem):acc) [] alphabetStrings
         mBlank <- o .: "blank"
         mFinals <- o .: "finals"
+        mInitial <- o .: "initial" :: Parser String
         transitionsListObject <- o .: "transitions" -- > Parser Object
         transitionsListParsed <- parseTransitions transitionsListObject -- [Parser TransitionStruct] <- (Parser Object -> (Parser [Parser TransitionStruct])) 
         transitions <- sequence $ transitionsListParsed -- [t] <- [Parser t] -> Parser [t]
         -- can't include the Map in curryied genericTransition... ?!
         let mTransitions = foldl (\acc currT -> Map.insert (tName currT, tRead currT) (Transition (genericTransition (tWrite currT) (tMove currT) (tToState currT))) acc) Map.empty transitions
-        return Machine{mName=mName, mAlphabet=mAlphabet, mBlank=mBlank, mFinals=mFinals, mTransitions=mTransitions}
+        return Machine{mName=mName, mAlphabet=mAlphabet, mBlank=mBlank, mFinals=mFinals, mTransitions=mTransitions, mInitial=mInitial}
