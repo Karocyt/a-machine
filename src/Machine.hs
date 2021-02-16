@@ -84,9 +84,9 @@ parseTransitions raw =
     -- parse the JSON thing into a HashMap String (HashMap String a)
     parseJSON raw
 
-checkBlankAndDuplicates :: [Char] -> Char -> [Char] -> Bool
-checkBlankAndDuplicates [] _ _ = True
-checkBlankAndDuplicates (a:as) b seen = True
+onlyUnique :: Eq a => [a] -> Bool
+onlyUnique [] = True
+onlyUnique (x:xs) = if elem x xs then False else onlyUnique xs 
 
 -- Following https://artyom.me/aeson tutorial
 instance FromJSON Machine where
@@ -94,8 +94,8 @@ instance FromJSON Machine where
         mName <- o .: "name"
         alphabetStrings <- o .: "alphabet" :: Parser [String]
         let mAlphabet = foldl (\acc curr_elem -> (head curr_elem):acc) [] alphabetStrings
-        if False
-            then fail "Coucou" else pure True
+        if (onlyUnique mAlphabet)
+            then pure True else fail "Duplicates found in alphabet"
         mBlank <- o .: "blank"
         if (elem mBlank mAlphabet)
             then pure True else fail "Blank char missing in alphabet"
