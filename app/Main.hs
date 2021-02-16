@@ -5,8 +5,8 @@ import System.IO (readFile)
 import Control.Exception (try, SomeException)
 import Data.ByteString.Lazy.Char8 (pack)
 import Data.Aeson (eitherDecode)
+
 import Machine
-import Runner
 
 usage :: String
 usage = "Usage: ./a-machine desc.json tape\nwhere:\n\t- 'desc.json' is a json encoded file containing a valid machine description\n\t- 'tape' is a string of instructions from the machine alphabet"

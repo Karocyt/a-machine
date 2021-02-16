@@ -106,3 +106,17 @@ buildState tape_content initial_state = do
         pos=0,
         nextTransition=initial_state
     })
+
+-- NEEDS:
+-- - check if nextTransition in finals
+--   - Right State
+-- - Execute/check if transition exists
+--   - Left "error blabla"
+-- - Move pos
+--   - Left "Stay on the dancefloor"
+-- - Tail recursion
+-- State might get bigger depending on how we handle bonuses (keeping history, counting iterations...)
+
+-- TO DO
+runMachine :: Machine -> State -> Either String State
+runMachine machine state = Left $ "It's ALIIIIIVE:\n" ++ (show machine) ++ "\n" ++ (show state)
