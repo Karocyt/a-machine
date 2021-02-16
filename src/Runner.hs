@@ -13,7 +13,7 @@ import Machine
 -- - Move pos
 --   - Left "Stay on the dancefloor"
 -- - Tail recursion
+-- State might get bigger depending on how we handle bonuses (keeping history, counting iterations...)
 
 runMachine :: Machine -> State -> Either String State
 runMachine machine state = Left $ "It's ALIIIIIVE:\n" ++ (show machine) ++ "\n" ++ (show state)
--- runMachine machine state = Left $ show machine

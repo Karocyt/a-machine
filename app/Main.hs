@@ -8,6 +8,9 @@ import Runner
 
 import Control.Exception (try, SomeException)
 
+import Data.Aeson (eitherDecode)
+import Data.ByteString.Lazy.Char8 (pack)
+
 usage :: String
 usage = "Usage: ./a-machine desc.json tape\nwhere:\n\t- 'desc.json' is a json encoded file containing a valid machine description\n\t- 'tape' is a string of instructions from the machine alphabet"
 
@@ -27,7 +30,7 @@ buildMachine (Left str) = pure $ Left str
 buildMachine (Right args) = do
     let filename = head args
     content <- eitherRead filename
-    pure $ content >>= parseMachine
+    pure $ content >>= eitherDecode.pack
 
 realMain :: Either String Machine -> Either String [String] -> String
 realMain (Left err1) _ = err1
