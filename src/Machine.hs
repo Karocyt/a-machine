@@ -7,13 +7,10 @@
 
 module Machine where
 
--- For ToJSON
-import Data.Aeson.Types
+-- For FromJSON
+import Data.Aeson.Types (Parser, Object, Value)
 import qualified Data.HashMap.Strict as HM
-
--- Generic for ToJSON/FromJSON
-import GHC.Generics
-import Data.Aeson (Value(..), FromJSON(..), parseJSON, (.:), (.=), withObject)
+import Data.Aeson (FromJSON(..), parseJSON, (.:), withObject)
 
 -- for Map (String, Char) Transition
 import Data.Map (Map)
@@ -65,7 +62,7 @@ instance (Typeable a, Typeable b) => Show (a->b) where
 -- - nextTransition
 
 -- Tape is an alias for String
--- Move is (+1) or (-1) -- bounds checks ?
+-- Move is (+1) or (-1) -- bounds checks in type ?
 
 -- Transition is of type State -> Either String State
 -- Behing the scenes, Transition is a partially applied GenericTransition of type
@@ -118,12 +115,12 @@ genericTransition :: Char -> Move -> String -> Map (String, Char) Transition -> 
 genericTransition = error "Not implemented yet"
 
 data Machine = Machine {
-    mName :: String,
-    mAlphabet :: [Char],
-    mBlank :: Char,
-    mFinals :: [String],
-    mTransitions :: Map (String, Char) Transition,
-    mInitial :: String
+    name :: String,
+    alphabet :: [Char],
+    blank :: Char,
+    finals :: [String],
+    transitions :: Map (String, Char) Transition,
+    initial :: String
 } deriving (Show)
 
 data TransitionStruct = TransitionStruct {
@@ -132,7 +129,7 @@ data TransitionStruct = TransitionStruct {
     tToState :: [Char],
     tWrite :: Char,
     tMove :: Move
-} deriving (Generic, Show)
+} deriving (Show)
 
 -- Following https://artyom.me/aeson tutorial
 
@@ -172,7 +169,7 @@ instance FromJSON Machine where
         transitions <- sequence $ transitionsListParsed -- [t] <- [Parser t] -> Parser [t]
         -- can't include the Map in curryied genericTransition... ?!
         let mTransitions = foldl (\acc currT -> Map.insert (tName currT, tRead currT) (Transition (genericTransition (tWrite currT) (tMove currT) (tToState currT))) acc) Map.empty transitions
-        return Machine{mName=mName, mAlphabet=mAlphabet, mBlank=mBlank, mFinals=mFinals, mTransitions=mTransitions, mInitial=mInitial}
+        return Machine{name=mName, alphabet=mAlphabet, blank=mBlank, finals=mFinals, transitions=mTransitions, initial=mInitial}
 
 buildState :: String -> String -> Either String State
 buildState tape_content initial_state = do

@@ -11,6 +11,10 @@ import Control.Exception (try, SomeException)
 usage :: String
 usage = "Usage: ./a-machine desc.json tape\nwhere:\n\t- 'desc.json' is a json encoded file containing a valid machine description\n\t- 'tape' is a string of instructions from the machine alphabet"
 
+processArgs :: [String] -> Either String [String]
+processArgs xs  | length xs /= 2    = Left usage
+                | otherwise         = Right xs
+
 eitherRead :: String -> IO (Either String String)
 eitherRead filename = do
     res <- try (readFile filename) :: IO (Either SomeException String)
@@ -29,7 +33,7 @@ realMain :: Either String Machine -> Either String [String] -> String
 realMain (Left err1) _ = err1
 realMain _ (Left err2) = err2
 realMain (Right machine) (Right args) = do
-    let eitherState = buildState (args !! 1) $ mInitial machine
+    let eitherState = buildState (args !! 1) $ initial machine
     let finalState = eitherState >>= (runMachine machine) 
 
     case (finalState) of
@@ -38,7 +42,7 @@ realMain (Right machine) (Right args) = do
 
 main :: IO ()
 main = do
-    putStrLn "-- BEGIN ----------------------------------"
+    putStrLn "----- BEGIN --------------------------------------------"
     args <- processArgs <$> getArgs
     -- putStrLn "- Arguments checked"
     machine <- buildMachine args
@@ -47,5 +51,5 @@ main = do
     -- realMain returns the last tape or an error message
     putStrLn $ realMain machine args
 
-    putStrLn "-- END ------------------------------------"
+    putStrLn "----- END (All exceptions/errors handled properly) -----"
 
