@@ -2,6 +2,7 @@ module Main where
 
 import System.Environment (getArgs)
 import System.IO (readFile)
+import System.Exit (exitFailure)
 import Control.Exception (try, SomeException)
 import Data.ByteString.Lazy.Char8 (pack)
 import Data.Aeson (eitherDecode)
@@ -29,12 +30,13 @@ buildMachine (Right args)   = do
     content <- eitherRead filename
     pure $ content >>= eitherDecode.pack
 
-realMain :: Either String Machine -> Either String [String] -> String
-realMain (Left err1) _ = err1
-realMain _ (Left err2) = err2
-realMain (Right machine) (Right args) = case ( (buildState (args !! 1) $ initial machine) >>= (runMachine machine) ) of
-        Left str            -> str
-        Right last_state    -> tape last_state
+buildInitialState :: Either String Machine -> Either String [String] -> Either String State
+buildInitialState (Left err1) _ = Left err1
+buildInitialState _ (Left err2) = Left err2
+buildInitialState (Right machine) (Right args) = (buildState (args !! 1) $ initial machine)
+
+debug :: IO ()
+debug = putStrLn "----- END (All exceptions/errors handled properly) -----"
 
 main :: IO ()
 main = do
@@ -43,7 +45,7 @@ main = do
     args        <- processArgs <$> getArgs
     machine     <- buildMachine args
 
-    -- realMain returns the last tape or an error message
-    putStrLn $ realMain machine args
-
-    putStrLn "----- END (All exceptions/errors handled properly) -----"
+    -- realMain returns the last tape
+    case ( runMachine <$> machine <*> buildInitialState machine args ) of -- POWPOWPOW
+        Left str    -> putStrLn str >> putStrLn "----- END (Exceptions or Errors handled properly) ------" >> exitFailure
+        Right state -> putStrLn ("It's ALIIIIIVE:\n" ++ (show machine) ++ "\n" ++ (show state)) >> putStrLn "----- END (No errors) ----------------------------------"
