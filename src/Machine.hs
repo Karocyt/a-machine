@@ -173,3 +173,11 @@ instance FromJSON Machine where
         -- can't include the Map in curryied genericTransition... ?!
         let mTransitions = foldl (\acc currT -> Map.insert (tName currT, tRead currT) (Transition (genericTransition (tWrite currT) (tMove currT) (tToState currT))) acc) Map.empty transitions
         return Machine{mName=mName, mAlphabet=mAlphabet, mBlank=mBlank, mFinals=mFinals, mTransitions=mTransitions, mInitial=mInitial}
+
+buildState :: String -> String -> Either String State
+buildState tape_content initial_state = do
+    Right (State {
+        tape=tape_content,
+        pos=0,
+        nextTransition=initial_state
+    })
