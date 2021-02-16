@@ -1,12 +1,19 @@
 module Runner where
 
-
 import System.Exit (exitFailure)
 
 import Machine
 
--- should return the tape in its final stage
--- can return errorz as a string to without using Either ?
+-- NEEDS:
+-- - check if nextTransition in finals
+--   - Right State
+-- - Execute/check if transition exists
+--   - Left "error blabla"
+-- - Move pos
+--   - Left "Stay on the dancefloor"
+-- - Tail recursion
+-- State might get bigger depending on how we handle bonuses (keeping history, counting iterations...)
 
-runMachine :: String -> Machine -> String
-runMachine t m = show m
+runMachine :: Machine -> State -> Either String State
+runMachine machine state = Left $ "It's ALIIIIIVE:\n" ++ (show machine) ++ "\n" ++ (show state)
+-- TO DO

@@ -30,7 +30,7 @@ library:
   source-dirs: src
 
 executables:
-  a-machine-exe:
+  a-machine:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
