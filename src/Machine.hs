@@ -20,28 +20,12 @@ instance (Typeable a, Typeable b) => Show (a->b) where
   show _ = show $ typeOf (undefined :: a -> b)
 
 type Tape = String
+type Move = Int
 -- Map added to parameters for now as I can't see how to properly curry it
 -- type Transition = Map (String, Char) Transition -> State -> Either String State
 newtype Transition = Transition { runTransition :: Map (String, Char) Transition -> State -> Either String State } deriving Show
 
-type Move = Int
-
-stringToMove :: String -> Either String Move
-stringToMove "LEFT" = Right (-1)
-stringToMove "RIGHT" = Right 1
-stringToMove s = Left ("Invalid direction in a Transition: '" ++ s ++ "'")
-
-data State = State {
-    tape :: Tape,
-    pos :: Int,
-    nextTransition :: String -- should be Transition
-} deriving (Show)
-
--- toWrite Char -> Move -> toState String -> transitionList Map (String, Char) Transition -> currState State -> newState Either String State 
-genericTransition :: Char -> Move -> String -> Map (String, Char) Transition -> State -> Either String State  
-genericTransition = error "Not implemented yet"
--- TO DO
-
+-- Static Machine type
 data Machine = Machine {
     name :: String,
     alphabet :: [Char],
@@ -51,6 +35,14 @@ data Machine = Machine {
     initial :: String
 } deriving (Show)
 
+-- State type
+data State = State {
+    tape :: Tape,
+    pos :: Int,
+    nextTransition :: String -- should be Transition
+} deriving (Show)
+
+-- Intermediate type, used while building the Machine
 data TransitionStruct = TransitionStruct {
     tName :: String,
     tRead :: Char,
@@ -59,7 +51,15 @@ data TransitionStruct = TransitionStruct {
     tMove :: Move
 } deriving (Show)
 
--- Following https://artyom.me/aeson tutorial
+stringToMove :: String -> Either String Move
+stringToMove "LEFT" = Right (-1)
+stringToMove "RIGHT" = Right 1
+stringToMove s = Left ("Invalid direction in a Transition: '" ++ s ++ "'")
+
+-- toWrite Char -> Move -> toState String -> transitionList Map (String, Char) Transition -> currState State -> newState Either String State 
+genericTransition :: Char -> Move -> String -> Map (String, Char) Transition -> State -> Either String State  
+genericTransition = error "Not implemented yet"
+-- TO DO
 
 buildTransition :: String -> Object -> Parser TransitionStruct
 buildTransition name fields = do -- Parser
@@ -84,12 +84,21 @@ parseTransitions raw =
     -- parse the JSON thing into a HashMap String (HashMap String a)
     parseJSON raw
 
+checkBlankAndDuplicates :: [Char] -> Char -> [Char] -> Bool
+checkBlankAndDuplicates [] _ _ = True
+checkBlankAndDuplicates (a:as) b seen = True
+
+-- Following https://artyom.me/aeson tutorial
 instance FromJSON Machine where
     parseJSON = withObject "machine" $ \o -> do -- in Parser (kinda Either String Value)
         mName <- o .: "name"
         alphabetStrings <- o .: "alphabet" :: Parser [String]
         let mAlphabet = foldl (\acc curr_elem -> (head curr_elem):acc) [] alphabetStrings
+        if False
+            then fail "Coucou" else pure True
         mBlank <- o .: "blank"
+        if (elem mBlank mAlphabet)
+            then pure True else fail "Blank char missing in alphabet"
         mFinals <- o .: "finals"
         mInitial <- o .: "initial" :: Parser String
         transitionsListObject <- o .: "transitions" -- > Parser Object
