@@ -34,6 +34,12 @@ where:
 - `desc.json` is a json encoded file containing a valid machine description
 - `tape` is a string of instructions from the machine alphabet
 
+## Delete
+
+```bash
+rm -rf .stack-work
+```
+
 # Notepad:
 
 The json fields are defined as follows:
