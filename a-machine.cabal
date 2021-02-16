@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 60159cbbf16c9b2e57ee5ee27d1c5d0623c3598030de9bc707ba417e3bb3d250
+-- hash: 6daea2527be2f9b0d068d105f005ab225593979b931c1019c4b1af07de9bcafb
 
 name:           a-machine
 version:        0.1.0.0
@@ -28,7 +28,6 @@ source-repository head
 library
   exposed-modules:
       Machine
-      Parser
       Runner
   other-modules:
       Paths_a_machine

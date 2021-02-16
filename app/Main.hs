@@ -2,7 +2,6 @@ module Main where
 
 import System.Environment (getArgs)
 import System.IO (readFile)
-import Parser
 import Machine
 import Runner
 
