@@ -1,6 +1,5 @@
 module Runner where
 
-
 import System.Exit (exitFailure)
 
 import Machine
@@ -17,3 +16,4 @@ import Machine
 
 runMachine :: Machine -> State -> Either String State
 runMachine machine state = Left $ "It's ALIIIIIVE:\n" ++ (show machine) ++ "\n" ++ (show state)
+-- TO DO
