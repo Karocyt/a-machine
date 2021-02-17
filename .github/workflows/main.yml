@@ -27,9 +27,9 @@ jobs:
       - uses: actions/setup-haskell@v1.1.4
 
       # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: stack-exe build
+      - name: Build a-machine
+        run: stack build
 
       # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
-        run: stack-exe exec a-machine ./Examples/unary.json 1.=
+      - name: Execute with a valid command
+        run: stack exec a-machine ./Examples/unary.json 1.=
