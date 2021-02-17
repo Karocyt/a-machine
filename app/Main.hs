@@ -6,6 +6,8 @@ import System.Exit (exitFailure)
 import Control.Exception (try, SomeException)
 import Data.ByteString.Lazy.Char8 (pack)
 import Data.Aeson (eitherDecode)
+import Data.Either
+import Control.Monad (join)
 
 import Machine
 
@@ -30,10 +32,10 @@ buildMachine (Right args)   = do
     content <- eitherRead filename
     pure $ content >>= eitherDecode.pack
 
-buildInitialState :: Either String Machine -> Either String [String] -> Either String State
-buildInitialState (Left err1) _ = Left err1
-buildInitialState _ (Left err2) = Left err2
-buildInitialState (Right machine) (Right args) = (buildState (args !! 1) $ initial machine)
+buildState :: Either String Machine -> Either String [String] -> Either String State
+buildState (Left err1) _ = Left err1
+buildState _ (Left err2) = Left err2
+buildState (Right machine) (Right args) = Right (State (args !! 1) 0 $ initial machine)
 
 debug :: IO ()
 debug = putStrLn "----- END (All exceptions/errors handled properly) -----"
@@ -45,7 +47,9 @@ main = do
     args        <- processArgs <$> getArgs
     machine     <- buildMachine args
 
-    -- realMain returns the last tape
-    case ( runMachine <$> machine <*> buildInitialState machine args ) of -- POWPOWPOW
+    -- buildState returns the last tape
+    case ( join ((runMachine <$> machine) <*> buildState machine args) ) of
         Left str    -> putStrLn str >> putStrLn "----- END (Exceptions or Errors handled properly) ------" >> exitFailure
-        Right state -> putStrLn ("It's ALIIIIIVE:\n" ++ (show machine) ++ "\n" ++ (show state)) >> putStrLn "----- END (No errors) ----------------------------------"
+        Right state -> putStrLn ("It's ALIIIIIVE:\n" ++ (show state)) >> putStrLn "----- END (No errors) ----------------------------------"
+
+    
