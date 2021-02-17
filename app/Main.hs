@@ -47,6 +47,7 @@ main = do
     args        <- processArgs <$> getArgs
     machine     <- buildMachine args
 
+    putStrLn $ show machine -- print everything to avoid the lazy side of things
     -- buildState returns the last tape
     case ( join ((runMachine <$> machine) <*> buildState machine args) ) of
         Left str    -> putStrLn str >> putStrLn "----- END (Exceptions or Errors handled properly) ------" >> exitFailure

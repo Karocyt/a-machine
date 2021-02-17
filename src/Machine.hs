@@ -96,6 +96,10 @@ onlyUnique :: Eq a => [a] -> Bool
 onlyUnique [] = True
 onlyUnique (x:xs) = if elem x xs then False else onlyUnique xs 
 
+-- mapInsertFailIfExist :: Ord k => k -> v -> Map k v -> Map k v
+-- mapInsertFailIfExist k v m = if Map.member k m
+--     then fail "Double definition in transitions." else Map.insert k v m
+
 -- Following https://artyom.me/aeson tutorial
 instance FromJSON Machine where
     parseJSON = withObject "machine" $ \o -> do -- in Parser (kinda Either String Value)
@@ -113,8 +117,11 @@ instance FromJSON Machine where
         transitionsListObject <- o .: "transitions" -- > Parser Object
         transitionsListParsed <- parseTransitions transitionsListObject mAlphabet -- [Parser TransitionStruct] <- (Parser Object -> (Parser [Parser TransitionStruct])) 
         transitions <- sequence $ transitionsListParsed -- [t] <- [Parser t] -> Parser [t]
+        let keyTuples = foldl (\acc t -> (tName t, tRead t):acc) [] transitions
+        if onlyUnique keyTuples
+            then pure True else fail "Duplicate definitions in transitions"
         -- can't include the Map in curryied genericTransition... ?!
-        let mTransitions = foldl (\acc currT -> Map.insert (tName currT, tRead currT) (Transition (genericTransition (tWrite currT) (tMove currT) (tToState currT))) acc) Map.empty transitions
+        let mTransitions = foldl (\acc t -> Map.insert (tName t, tRead t) (Transition (genericTransition (tWrite t) (tMove t) (tToState t))) acc) Map.empty transitions
         return Machine{name=mName, alphabet=mAlphabet, blank=mBlank, finals=mFinals, transitions=mTransitions, initial=mInitial}
 
 -- NEEDS:
