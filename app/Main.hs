@@ -51,5 +51,3 @@ main = do
     case ( join ((runMachine <$> machine) <*> buildState machine args) ) of
         Left str    -> putStrLn str >> putStrLn "----- END (Exceptions or Errors handled properly) ------" >> exitFailure
         Right state -> putStrLn ("It's ALIIIIIVE:\n" ++ (show state)) >> putStrLn "----- END (No errors) ----------------------------------"
-
-    
