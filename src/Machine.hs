@@ -19,7 +19,7 @@ import Data.Typeable
 instance (Typeable a, Typeable b) => Show (a->b) where
   show _ = show $ typeOf (undefined :: a -> b)
 
-type Tape = String
+type Tape = String -- might be better with a Array-like monad ? Thinking about infinite Tape
 type Move = Int
 -- Map added to parameters for now as I can't see how to properly curry it
 -- type Transition = Map (String, Char) Transition -> State -> Either String State
@@ -108,14 +108,6 @@ instance FromJSON Machine where
         let mTransitions = foldl (\acc currT -> Map.insert (tName currT, tRead currT) (Transition (genericTransition (tWrite currT) (tMove currT) (tToState currT))) acc) Map.empty transitions
         return Machine{name=mName, alphabet=mAlphabet, blank=mBlank, finals=mFinals, transitions=mTransitions, initial=mInitial}
 
-buildState :: String -> String -> Either String State
-buildState tape_content initial_state = do
-    Right (State {
-        tape=tape_content,
-        pos=0,
-        nextTransition=initial_state
-    })
-
 -- NEEDS:
 -- - check if nextTransition in finals
 --   - Right State
@@ -128,4 +120,4 @@ buildState tape_content initial_state = do
 
 -- TO DO
 runMachine :: Machine -> State -> Either String State
-runMachine machine state = Left $ "It's ALIIIIIVE:\n" ++ (show machine) ++ "\n" ++ (show state)
+runMachine machine state = Right state -- Left $ "It's DEAD" -- :\n" ++ (show machine) ++ "\n" ++ (show state)
