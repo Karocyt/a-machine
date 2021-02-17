@@ -12,16 +12,18 @@ import Data.Aeson (FromJSON(..), parseJSON, (.:), withObject)
 import Data.Set (Set)
 import qualified Data.Set as Set
 
-import Control.Monad (join)
-
 -- for Map (String, Char) Transition
 import Data.Map (Map)
 import qualified Data.Map as Map -- functions names clash with Prelude, not Map type itself
 
 -- Show Functions
 import Data.Typeable
+
+import Control.Monad (join)
+
 instance (Typeable a, Typeable b) => Show (a->b) where
   show _ = show $ typeOf (undefined :: a -> b)
+
 
 type Tape = String -- might be better with a Array-like Map or similar ? Thinking about infinite Tape
 type Move = Int
@@ -94,11 +96,7 @@ parseTransitions raw mAlphabet =
 
 onlyUnique :: Eq a => [a] -> Bool
 onlyUnique [] = True
-onlyUnique (x:xs) = if elem x xs then False else onlyUnique xs 
-
--- mapInsertFailIfExist :: Ord k => k -> v -> Map k v -> Map k v
--- mapInsertFailIfExist k v m = if Map.member k m
---     then fail "Double definition in transitions." else Map.insert k v m
+onlyUnique (x:xs) = if elem x xs then False else onlyUnique xs
 
 -- Following https://artyom.me/aeson tutorial
 instance FromJSON Machine where
