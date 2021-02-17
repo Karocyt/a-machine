@@ -11,6 +11,9 @@ import qualified Data.HashMap.Strict as HM
 import Data.Aeson (FromJSON(..), parseJSON, (.:), withObject)
 import Data.Set (Set)
 import qualified Data.Set as Set
+import Data.Sequence (Seq)
+import qualified Data.Sequence as Seq
+import Data.Either (isLeft, fromLeft)
 
 -- for Map (String, Char) Transition
 import Data.Map (Map)
@@ -24,12 +27,11 @@ import Control.Monad (join)
 instance (Typeable a, Typeable b) => Show (a->b) where
   show _ = show $ typeOf (undefined :: a -> b)
 
-
-type Tape = String -- might be better with a Array-like Map or similar ? Thinking about infinite Tape
+type Tape = Seq Char
 type Move = Int
 -- Map added to parameters for now as I can't see how to properly curry it
 -- type Transition = Map (String, Char) Transition -> State -> Either String State
-newtype Transition = Transition { runTransition :: Map (String, Char) Transition -> State -> Either String State } deriving Show
+newtype Transition = Transition { runTransition :: Map (String, Char) Transition -> State -> State } deriving Show
 
 -- Static Machine type
 data Machine = Machine {
@@ -57,15 +59,29 @@ data TransitionStruct = TransitionStruct {
     tMove :: Move
 } deriving (Show)
 
+stateFromString :: String -> Int -> String -> State
+stateFromString tapeStr pos next = State {
+    tape=Seq.fromList tapeStr,
+    pos=pos,
+    nextTransition=next
+}
+
+currChar :: State -> Either String Char
+currChar state = case (Seq.lookup (pos state) (tape state)) of
+    Nothing -> Left $ "Error reading tape: Out of bounds while reading pos " ++ (show (pos state))
+    Just x -> Right x
+
 stringToMove :: String -> Either String Move
 stringToMove "LEFT" = Right (-1)
 stringToMove "RIGHT" = Right 1
 stringToMove s = Left ("Invalid direction in a Transition: '" ++ s ++ "'")
 
--- toWrite Char -> Move -> toState String -> transitionList Map (String, Char) Transition -> currState State -> newState Either String State 
-genericTransition :: Char -> Move -> String -> Map (String, Char) Transition -> State -> Either String State  
-genericTransition = error "Not implemented yet"
--- TO DO
+genericTransition :: Char -> Move -> String -> Map (String, Char) Transition -> State -> State  
+genericTransition toWrite move toTransition transitions state = do
+    let newTape = Seq.update (pos state) toWrite (tape state)
+    let newPos = (pos state) + move
+    let nextT = toTransition
+    State {tape=newTape, pos=newPos, nextTransition=nextT}
 
 buildTransition :: String -> Object -> Set Char -> Parser TransitionStruct
 buildTransition name fields mAlphabet = do -- Parser
@@ -123,8 +139,6 @@ instance FromJSON Machine where
         return Machine{name=mName, alphabet=mAlphabet, blank=mBlank, finals=mFinals, transitions=mTransitions, initial=mInitial}
 
 -- NEEDS:
--- - check if nextTransition in finals
---   - Right State
 -- - Execute/check if transition exists
 --   - Left "error blabla"
 -- - Move pos
@@ -134,4 +148,17 @@ instance FromJSON Machine where
 
 -- TO DO
 runMachine :: Machine -> State -> Either String State
-runMachine machine state = Right state -- Left $ "It's DEAD" -- :\n" ++ (show machine) ++ "\n" ++ (show state)
+runMachine machine state    | elem (nextTransition state) (finals machine) = Right state
+                            | isLeft (currChar state) = Left $ fromLeft "" $ currChar state
+                            | otherwise = do
+                                c <- currChar state
+                                let t = nextTransition state
+                                let maybeT = Map.lookup (t, c) (transitions machine)
+                                nextT <- case (maybeT) of
+                                    Nothing -> Left $ "Behavior is not defined for state '" ++ t ++ "' and symbol '" ++ (show c) ++ "'"
+                                    Just x -> Right x
+                                let newState = (runTransition nextT) (transitions machine) state
+                                runMachine machine newState
+
+                                -- let newTransition = ()
+                                -- Left $ "It's DEAD" -- :\n" ++ (show machine) ++ "\n" ++ (show state)

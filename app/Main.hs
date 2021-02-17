@@ -35,7 +35,7 @@ buildMachine (Right args)   = do
 buildState :: Either String Machine -> Either String [String] -> Either String State
 buildState (Left err1) _ = Left err1
 buildState _ (Left err2) = Left err2
-buildState (Right machine) (Right args) = Right (State (args !! 1) 0 $ initial machine)
+buildState (Right machine) (Right args) = Right (stateFromString (args !! 1) 0 $ initial machine)
 
 debug :: IO ()
 debug = putStrLn "----- END (All exceptions/errors handled properly) -----"
