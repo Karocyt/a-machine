@@ -37,7 +37,7 @@ where:
 ## Delete
 
 ```bash
-rm -rf .stack-work
+rm -r .stack-work
 ```
 
 # Notepad:
@@ -109,4 +109,4 @@ BasicCheck args could disappear with even heavier Machine smart constructors
 is managing missing tape with Either too much ?
 `json` package might sound more "standard library" than `aeson`
 
-To return a Either String Machine, all fields might need to be their own types, returning Either in their constructors ?
+State might get bigger depending on how we handle bonuses (keeping history, counting iterations...)

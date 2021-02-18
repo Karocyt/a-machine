@@ -8,8 +8,9 @@ import Data.ByteString.Lazy.Char8 (pack)
 import Data.Aeson (eitherDecode)
 import Data.Either
 import Control.Monad (join)
+import Data.Foldable (toList)
 
-import Machine
+import Machine (Machine, State, stateFromString, runMachine, tape)
 
 usage :: String
 usage = "Usage: ./a-machine desc.json tape\nwhere:\n\t- 'desc.json' is a json encoded file containing a valid machine description\n\t- 'tape' is a string of instructions from the machine alphabet"
@@ -35,20 +36,16 @@ buildMachine (Right args)   = do
 buildState :: Either String Machine -> Either String [String] -> Either String State
 buildState (Left err1) _ = Left err1
 buildState _ (Left err2) = Left err2
-buildState (Right machine) (Right args) = Right (stateFromString (args !! 1) 0 $ initial machine)
+buildState (Right machine) (Right args) = Right (stateFromString (args !! 1) 0 machine)
 
 debug :: IO ()
 debug = putStrLn "----- END (All exceptions/errors handled properly) -----"
 
 main :: IO ()
 main = do
-    putStrLn "----- BEGIN --------------------------------------------"
-    -- IO stuff stays in main then byebye IO
     args        <- processArgs <$> getArgs
     machine     <- buildMachine args
 
-    putStrLn $ show machine -- print everything to avoid the lazy side of things
-    -- buildState returns the last tape
     case ( join ((runMachine <$> machine) <*> buildState machine args) ) of
-        Left str    -> putStrLn str >> putStrLn "----- END (Exceptions or Errors handled properly) ------" >> exitFailure
-        Right state -> putStrLn ("It's ALIIIIIVE:\n" ++ (show state)) >> putStrLn "----- END (No errors) ----------------------------------"
+        Left str    -> putStrLn str >> exitFailure
+        Right state -> putStrLn $ "Final tape: " ++ (show $ toList $ tape state)
