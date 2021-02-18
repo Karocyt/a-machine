@@ -32,4 +32,4 @@ jobs:
 
       # Runs a set of commands using the runners shell
       - name: Execute with a valid command
-        run: stack exec a-machine ./Examples/unary.json 1.=
+        run: stack exec a-machine ./Examples/github_test_aba._.json aba.
