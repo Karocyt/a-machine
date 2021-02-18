@@ -104,6 +104,12 @@ instance FromJSON Machine where
     parseJSON = withObject "machine" $ \o -> do -- in Parser (kinda Either String Value)
         mName <- o .: "name"
         alphabetStrings <- o .: "alphabet" :: Parser [String]
+        if elem True (foldl (\acc (x:xs) -> if xs == []
+            then False:acc
+            else True:acc
+            ) [] alphabetStrings)
+        then fail "Alphabet values cannot contain more than 1 character"
+        else pure True
         let lAlphabet = foldl (\acc curr_elem -> (head curr_elem):acc) [] alphabetStrings
         if (onlyUnique lAlphabet)
             then pure True else fail "Duplicates found in alphabet"
