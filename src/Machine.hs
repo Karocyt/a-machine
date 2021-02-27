@@ -41,7 +41,7 @@ instance Show Machine where
         "\nblank: '" ++ blank:"'" ++
         "\ninitial: " ++ initial ++
         "\nfinals: " ++ (intercalate ", " finals) ++
-        "\ntransitions:\n\t- " ++ (((intercalate "\n\t- ").map (\(g:gs) -> (show.fst.fst) g ++ " defined for:\n\t\t" ++ intercalate ", " (map (show.snd.fst) gs))) $ groupBy (\a b -> (fst.fst) a == (fst.fst) b) $ Map.toList transitions) ++
+        "\ntransitions:\n\t- " ++ (((intercalate "\n\t- ").map (\(group) -> (show.fst.fst.head) group ++ " defined for:\n\t\t" ++ intercalate ", " (map (show.snd.fst) group))) $ groupBy (\a b -> (fst.fst) a == (fst.fst) b) $ Map.toList transitions) ++
         '\n':(concat ["*" | _ <- [1..42]])
 
 -- State type
