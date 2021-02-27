@@ -9,6 +9,7 @@ import Data.Sequence (Seq)
 import qualified Data.Sequence as Seq
 import Data.Map (Map)
 import qualified Data.Map as Map -- functions names clash with Prelude, not Map type itself
+import Data.List (intercalate, groupBy)
 import Data.Either (isLeft, fromLeft)
 import Control.Monad (join)
 import Data.HashMap.Strict (toList)
@@ -30,7 +31,18 @@ data Machine = Machine {
     finals :: [String],
     transitions :: Map (String, Char) Transition,
     initial :: String
-} deriving (Show)
+} --deriving (Show)
+
+instance Show Machine where
+    show (Machine name alphabet blank finals transitions initial) = (concat ["*" | _ <- [1..42]]) ++
+        "\n\t" ++ name ++
+        '\n':(concat ["*" | _ <- [1..42]]) ++
+        "\nalphabet: " ++ (Set.toList alphabet) ++
+        "\nblank: '" ++ blank:"'" ++
+        "\ninitial: " ++ initial ++
+        "\nfinals: " ++ (intercalate ", " finals) ++
+        "\ntransitions\n\t: " ++ (((intercalate "\n\t- ").(map show)) [fst x | x <- Map.toList transitions]) ++
+        '\n':(concat ["*" | _ <- [1..42]])
 
 -- State type
 data State = State {
@@ -80,7 +92,7 @@ buildTransition name fields mAlphabet = do
         tmpToState <- fields .: "to_state"
         tmpWrite <- fields .: "write"
         if Set.member tmpWrite mAlphabet
-            then pure True else fail $ "On '" ++ tmpRead:"', function '"++ name ++ "' is able to write '" ++ tmpWrite:"' which is not in the machine alphabet."
+            then pure True else fail $ "On '" ++ tmpRead:"', function '"++ name ++ "' is able to write " ++ (show tmpWrite) ++ " which is not in the machine alphabet."
         tmpAction <- fields .: "action"
         tmpMove <- case (stringToMove tmpAction) of
             Left s -> fail s
@@ -138,7 +150,7 @@ runMachine machine state    | elem (nextTransition state) (finals machine) = Rig
                                 let t = nextTransition state
                                 let maybeT = Map.lookup (t, c) (transitions machine)
                                 nextT <- case (maybeT) of
-                                    Nothing -> Left $ "Behavior is not defined for state '" ++ t ++ "' and symbol '" ++ (show c) ++ "'"
+                                    Nothing -> Left $ "Behavior is not defined for state '" ++ t ++ "' and symbol " ++ (show c)
                                     Just x -> Right x
                                 let newState = (runTransition nextT) (transitions machine) state
                                 runMachine machine newState
