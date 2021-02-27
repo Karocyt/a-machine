@@ -37,7 +37,7 @@ instance Show Machine where
     show (Machine name alphabet blank finals transitions initial) = (concat ["*" | _ <- [1..42]]) ++
         "\n\t" ++ name ++
         '\n':(concat ["*" | _ <- [1..42]]) ++
-        "\nalphabet: " ++ (Set.toList alphabet) ++
+        "\nalphabet: " ++ intercalate ", " (((map show).Set.toList) alphabet) ++
         "\nblank: '" ++ blank:"'" ++
         "\ninitial: " ++ initial ++
         "\nfinals: " ++ (intercalate ", " finals) ++
