@@ -46,6 +46,11 @@ main = do
     args        <- processArgs <$> getArgs
     machine     <- buildMachine args
 
+    case machine of
+        Right m -> putStrLn $ show m
+
     case ( join ((runMachine <$> machine) <*> buildState machine args) ) of
         Left str    -> putStrLn str >> exitFailure
         Right state -> putStrLn $ "Final tape: " ++ (show $ toList $ tape state)
+
+    debug
